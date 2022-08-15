@@ -88,11 +88,14 @@ const io = socket(serverInstance);//invoke socket method and pass in the sever w
 
 //listening for connections
 //clientSocket refers to the individual clients that have connected to us
+let allUsers = {};
 io.on('connection', (clientSocket)=>{
     console.log("Socket connection established!", clientSocket.id);
+    allUsers
 
 
     clientSocket.on('chat message', (data)=>{
+        data.recipient
         console.log(data)
         io.sockets.emit('chat message', data); //emmitting to ALL sockets!
     })
