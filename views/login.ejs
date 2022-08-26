@@ -5,14 +5,21 @@
             <div class="card shadow">
                 <div class="card-body">
                     <h1 class="card-title">Login</h1>
-                    <form action="/jabberbox/login" method="post">
+                    <form action="/login" method="post" novalidate class="validated-form">
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
-                            <input id="username" type="text" name="username" class="form-control">
+                            <input id="username" type="text" name="username" class="form-control" required>
+                            <div class="valid-feedback">Looks good!</div>
                         </div>
-                        <div class="mb-3">
+                        <!-- <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <input id="email" type="text" name="email" class="form-control">
+                            <input id="email" type="text" name="email" class="form-control" required>
+                            <div class="valid-feedback">Looks good!</div>
+                        </div> -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" id="password" required>
+                            <div class="valid-feedback">Looks good!</div>
                         </div>
                         <div class="d-grid">
                             <button class="btn btn-success">Login</button>

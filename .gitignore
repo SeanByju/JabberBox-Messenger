@@ -1,1 +1,4 @@
 node_modules
+.env
+Deprecated
+.DS_Store

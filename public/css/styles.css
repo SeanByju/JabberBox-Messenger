@@ -1,0 +1,38 @@
+.navbar-brand>img {
+    height: auto;
+    width: 40px;
+}
+
+#output>div.self{
+    display: flex; 
+    justify-content: flex-end;
+}
+
+#output>div.self>p{
+    max-width: 75%;
+    padding:15px;
+    border: 1px solid grey; 
+    display: inline-block;
+    border-radius: 25px 25px 0px 25px;
+    background-color:#d7e6de;
+}
+
+#output>div.other{
+    display: flex; 
+    justify-content: flex-start;
+}
+
+#output>div.other>p{
+    max-width: 75%;
+    padding:15px;
+    border: 1px solid grey;
+    display: inline-block;
+    border-radius: 25px 25px 25px 0px;
+    background-color:#cabcd5;
+}
+
+
+
+.new-notif {
+    color:gold;
+}

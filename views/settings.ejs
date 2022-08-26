@@ -1,0 +1,23 @@
+<% layout('/layouts/boilerplate') %>
+<div class="container d-flex justify-content-center align-items-center mt-5">
+    <div class="row flex-fill">
+        <div class="col-md-6 offset-md-3 col-xl-4 offset-xl-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h1 class="card-title">Remove Friends <i class="bi bi-person-x-fill"></i></h1>
+                    <ul id="friendList" class="list-unstyled d-grid gap-1 order-sm-last" >
+                        <% for(let friend of foundUser.friends){ %>
+                            <li>
+                                <form action="/<%= currentUser._id %>/settings/<%= friend.username %>?_method=DELETE" method="POST">
+                                    <div class="d-grid">
+                                        <button class="btn btn-outline-danger"><%= friend.username %></button>
+                                    </div>
+                                </form>
+                            </li>
+                        <% } %>  
+                    </ul> 
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,396 @@
+<% layout('/layouts/boilerplate') %>
+<div class="d-flex flex-column align-self-stretch container mt-3">
+    <h3 class="text-center mb-4">Welcome <%= foundUser.username %>!</h3>
+    <div class="row">
+        <button class="btn btn-primary d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+            Friends! <i class="bi bi-people-fill"></i>
+        </button>
+        <div id="collapseExample"  class="col-md-2 card collapse d-md-block">
+            <div class="mt-4">
+                <h3 class="text-center">Your Friends</h3>
+                <hr>
+
+                <!-- Button trigger modal -->
+                <div class="d-grid">
+                    <button type="button" class="btn btn-sm btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        Add Friends <i class="bi bi-person-plus-fill"></i>
+                    </button>
+                </div>
+                
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Search JabberBox for your friends!</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="#" id="user-search-form">
+                                <div class="mb-4 input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input id="user-search-field" type="text" class="form-control" placeholder="Search JabberBox Messenger, hit enter to search">
+                                </div>
+                            </form>
+                            <!-- will be populated with users when client searches  -->
+                            <div class="container">
+                                <ul id="search-results" class="list-unstyled d-grid gap-1 order-sm-last" >
+                                </ul>
+                            </div>
+
+                        
+                        </div>
+                        <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!--will populate with user's friends -->
+                <div style="height:60vh;overflow-y: auto;">
+                    <ul id="friendList" class="list-unstyled d-grid gap-1 order-sm-last" >
+                        <% for(let friend of foundUser.friends){ %>
+                            <li class="btn btn-outline-success" id="<%= friend.username %>"><%= friend.username %></li>
+                        <% } %>  
+                    </ul> 
+                </div>
+            </div>
+        </div>
+        <!-- <div class="col-md-10"> -->
+                <div id="chat-card" class=" col-md-10 card invisible" >
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h1 style="display: inline-block;" class="chat-card-title lead ps-3"></h1><button id="close" type="button" class="btn-close justify-content-end" aria-label="Close" title="Exit chat"></button>
+                        </div>
+                        <div id="chat-window" style="width: 100%; height:30rem;overflow-y:auto;" class="bg-secondary bg-gradient bg-opacity-10 p-3">
+                            <div id="output"></div>
+                            <div id="feedback"></div>
+                        </div>
+                        <form id="form" action="">
+                            <textarea id="message" type="text-area" placeholder="Message" class="form-control"></textarea>
+                            <div class="d-grid gap-2 d-flex justify-content-end mt-1">
+                                <input id="recipient" type="text" value="" class="invisible" readonly><button class="btn btn-primary" id="send">Send</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+        <!-- </div> -->
+    </div>
+</div>
+
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const username = '<%- foundUser.username %>'
+    const id = '<%- foundUser._id %>'
+    const token = '<%- foundUser.token %>'
+    // Query DOM
+    let recipient = document.getElementById('recipient');
+    let message = document.getElementById('message');
+    let output = document.getElementById('output');
+    let feedback = document.getElementById('feedback');
+    let closeChatBtn =  document.getElementById('close');
+    let messageForm = document.getElementById('form');
+    let searchForm = document.getElementById('user-search-form');
+    let searchInput = document.getElementById('user-search-field');
+    let resultsList = document.getElementById('search-results');
+    let friends = document.querySelectorAll('.btn-outline-success');
+
+    const socket = io('http://localhost:3000/', { query: `username=${username}&id=${id}`, auth: {token: `${token}`}}); 
+    socket.connect();
+    socket.inAChat = false;
+    socket.currentRoom = null;
+    
+    // Emmit events
+    // Function for leaving chats will use every time you leave
+    const exitChat = () => {
+        socket.inAChat = false;
+        let disabledArr = document.getElementsByClassName('disabled');
+            // Since you're leaving chat remove all disables
+            for(button of disabledArr){
+                button.classList.remove('disabled')
+            }
+        socket.emit('leave chat', {
+            room: socket.currentRoom,
+            sender: username,
+            recipient: recipient.value,
+        })
+        socket.currentRoom = null;
+    }
+    const mutationObserver = new MutationObserver(entry => {
+        // Recalculate the friends list
+        friends = document.querySelectorAll('.btn-outline-success');
+        for(let friend of friends){
+            friend.addEventListener('click', ()=>{
+                if(socket.inAChat){
+                    exitChat();
+                }
+                document.getElementsByClassName('chat-card-title')[0].innerText = `Chatting with ${friend.id}`;
+                document.getElementById('recipient').value = friend.id;
+                socket.emit('join room', {
+                    recipient: recipient.value,
+                    sender: username,
+                })
+                friend.innerHTML = friend.id; // resetting notification on button if present.
+            })    
+        } 
+    })
+
+    let list = document.getElementById('friendList');
+    mutationObserver.observe(list, {childList: true})
+
+    for(let friend of friends){
+        friend.addEventListener('click', ()=>{
+            if(socket.inAChat){
+                exitChat();
+            }
+            document.getElementsByClassName('chat-card-title')[0].innerText = `Chatting with ${friend.id}`;
+            document.getElementById('recipient').value = friend.id;
+            socket.emit('join room', {
+                recipient: recipient.value,
+                sender: username,
+            })
+            friend.innerHTML = friend.id; 
+        })
+    }
+
+    
+    let formEvents = ['submit', 'keyup'];
+    formEvents.forEach(event => {
+        messageForm.addEventListener(event, (e)=>{
+            if(event == 'submit' || e.code === 'Enter'){
+                e.preventDefault();
+                socket.emit('chat message', {
+                    recipient: recipient.value,
+                    message: message.value,
+                    sender: username,
+                    room: socket.currentRoom
+                })
+                message.value = ''; //clear message input after it's sent
+            }
+        })
+    })
+
+    searchForm.addEventListener('keyup', (e) => {
+        if(e.code === 'Enter'){
+            e.preventDefault();
+            if(!searchInput.value == ""){
+                socket.emit('searched user', {
+                searchedUser: searchInput.value,
+                sender: username,
+            })
+            console.log("you searched:", searchInput.value)
+            // searchInput.value = "";
+            resultsList.innerHTML = "";
+            }
+        }
+    })
+
+
+
+    // Will only be able to click once you're in a chat
+    closeChatBtn.addEventListener('click', ()=>{
+        exitChat()
+        document.getElementById('chat-card').classList.add('invisible');// Hide chat again
+    })
+
+    socket.on("disconnect", () => {
+    // socket.rooms.size === 0
+    });
+
+
+    //listen for events
+    socket.on('pending request', (data)=>{
+        let notificationMenu = document.getElementById('notif'); //grab ul to add notification to
+        notificationMenu.innerHTML = "";
+        //loop through list and create friend request card and append it to the notification menu
+        for(let user of data){
+            let newli = document.createElement("li");
+            newli.setAttribute('id', user);
+            newli.innerHTML = `<div class="card"><div class="card-body dropdown-item"><h5 class="card-text text-wrap text-break"><span class="fst-italic fw-bold">${user}</span> wants to be friends!</h5><button id="${user}" value= 2 class="btn btn-sm btn-success mb-1 acceptFriend">Accept</button><button id="${user}" value= 3 class="btn btn-sm btn-danger mb-1 acceptFriend">Deny</button></div></div>`;
+            notificationMenu.appendChild(newli)
+        }
+
+        let friendRequestBtns = document.querySelectorAll('.acceptFriend');
+        friendRequestBtns.forEach(btn => {
+            btn.addEventListener('click', ()=>{
+                console.log("User you might add", btn.id)
+                console.log("Decision on request", btn.value)
+
+                socket.emit('request decision', {
+                sender: username,
+                recipient: btn.id,
+                status: btn.value
+                })
+        
+                notificationMenu.childNodes.forEach(card => {
+                    if(card.id == btn.id){
+                        notificationMenu.removeChild(card);
+                    }
+                    if(notificationMenu.innerHTML == ""){
+                        notificationMenu.innerHTML = '<small>No new notifications!</small>'
+                    }
+                })
+            })
+        })
+
+        let bell = document.getElementById('bell');
+        bell.classList.add('new-notif'); //new notification visual
+    })
+
+    //Reset notification bell color when user has clicked the link
+    let notifcationLink = document.getElementById('notifLink');
+    notifcationLink.addEventListener('click', ()=>{
+        let bell = document.getElementById('bell');
+        bell.classList.remove('new-notif'); 
+    })
+
+    socket.on('new friend', (data) =>{
+        let list = document.getElementById('friendList');
+        let newFriendli = document.createElement("li");
+        newFriendli.setAttribute('id', data);
+        newFriendli.innerHTML = data;
+        newFriendli.classList.add('btn', 'btn-outline-success');
+        list.appendChild(newFriendli);
+
+    })
+
+
+    socket.on('joined room', async(data)=>{
+        socket.inAChat = true;
+        socket.currentRoom = data.chatRoom;
+        console.log(`${data.clientA} has joined the room!`)
+        let clients = [data.clientA, data.clientB];
+        for(let client of clients){
+            if(client !== username){
+                recipient.value = client;
+                document.getElementsByClassName('chat-card-title')[0].innerText = `Chatting with ${client}`;
+                //re-enable all friend button
+                let disabledArr = document.getElementsByClassName('disabled');
+                for(button of disabledArr){
+                    button.classList.remove('disabled');
+                }
+                //only disable the friend you're talking with to prevent additional emmiting 'join room'
+                document.getElementById(`${client}`).classList.add('disabled');
+                document.getElementById('chat-card').classList.remove('invisible');
+            }
+        }
+        output.innerHTML = '';
+        // Load past messages and style them
+        if(data.msgHistory.length !== 0){
+            output.innerHTML += data.msgHistory; //populate with message history only if there is actual history
+            let msgs = output.querySelectorAll("div"); //the divs will only have id's need to apply classes for style
+            for(let msg of msgs){
+                if(msg.getAttribute('id') == username){
+                    msg.classList.add('self'); //apply self class so css style can be applied
+                }else{
+                    msg.classList.add('other');//apply other class so css styles can be applied
+                }
+            }
+            feedback.scrollIntoView(); 
+        }
+    })
+
+    socket.on('clientB offline', (data)=>{
+        alert(`${data.clientB} is offline! Your messages will be sent to them`)
+    })
+
+
+    socket.on('clientB preoccupied', (data)=>{
+        console.log(`${data.clientB} is in another chat! Your messages will be sent to them`); //Perhaps not tell user?
+    })
+
+    socket.on('chat message', (data)=>{
+        if(data.sender == username){
+            output.innerHTML += '<div class="self"><p><strong>' + data.sender + ': </strong><br>' + data.message + '</p></div>';
+        }
+        else{
+            output.innerHTML += '<div class="other"><p><strong>' + data.sender + ': </strong><br>' + data.message + '</p></div>';
+        }
+        feedback.innerHTML = "";
+        feedback.scrollIntoView(); 
+    })
+
+    socket.on('message notification', async(data)=>{
+        // Message notification is sent to clientB's default room and whatever chatroom they're currently in
+        // Need to make sure if clientB is in a chat room only they see the notifcation
+        if(!socket.inAChat || data.clientB == username){
+            //loop through friends list and add notification next to name
+            for(let friend of friends){
+                if(friend.id == data.clientA){
+                    if(friend.innerHTML !== friend.id){
+                        // already sent a notification, do nothing
+                    }
+                    else{
+                        friend.innerHTML += ' <i class="bi bi-envelope-exclamation-fill"></i>';
+                    }
+                }
+            }
+        }
+    })
+
+    socket.on('search results', (data) => {
+        // let resultsList = document.getElementById('search-results')
+        for(let user of data){
+            let newli = document.createElement("li");
+            // newli.innerHTML = `${user} &nbsp <button id="addFriend" class="btn btn-sm btn-success mb-1">Add Friend</button>`;
+            newli.innerHTML = `<div class="card"><div class="card-body"><h5 class="card-title">${user}</h5><button id="${user}" class="btn btn-sm btn-success mb-1 addFriend">Add Friend</button></div></div>`;
+            resultsList.appendChild(newli);
+        }
+        let friendRequestBtns = document.querySelectorAll('.addFriend');
+        friendRequestBtns.forEach(btn => {
+            btn.addEventListener('click', ()=>{
+                // console.log("You tried to add a friend:", btn.id)
+                socket.emit('add friend', {
+                sender: username,
+                recipient: btn.id,
+                })
+
+                btn.innerText = "Request Sent";
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+                btn.setAttribute('disabled', "");
+            })
+        })
+    })
+
+    socket.on('update friends', (data) => {
+        console.log("We're here!")
+        let currentFriends = list.querySelectorAll('li'); //get the current buttons of your friends
+
+        for(let node of currentFriends){
+            if(node.id == data.clientB){
+                node.remove();
+            }
+        }
+
+        alert("User has unfriended you :(")
+    })
+
+    socket.on('clear chatwindow', (data) => {
+        document.getElementById('chat-card').classList.add('invisible');
+        // alert("User has unfriended you :(")
+    })
+    
+
+    socket.on('user has left room', (data)=>{
+       console.log(`${data.clientA} has left the chat!`)
+        // output.innerHTML += `<p><strong>${data.clientA} has left the chat</strong></p>`;
+    })
+
+    socket.on('user has disconnected', (data)=>{
+        console.log(`${data.clientA} has disconnected`)
+    })
+
+
+    socket.on("connect_error", (err) => {
+        console.log(err instanceof Error); // true
+        console.log(err.message); // not authorized
+        console.log(err.data); // { content: "Please retry later" }
+        alert("NOT AUTHORIZED! TRY SIGNING IN AGAIN.")
+    });
+</script>
