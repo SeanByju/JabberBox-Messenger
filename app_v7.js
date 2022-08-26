@@ -231,30 +231,30 @@ let onlineUsers = {};
 let allSockets = {}; 
 
 // Middleware to validate socket connection
-io.use(async function (socket, next){
-    // console.log("Socket Verification in process")
-    // console.log(socket.handshake.query.username)
-    // console.log(socket.handshake.query.id)
-    // console.log(socket.handshake.auth.token)
-    //Check if user has correct/up-to-date token
-    let foundUser = await User.findOne({token: socket.handshake.auth.token});
-    if(!foundUser){
-        const err = new Error("not authorized");
-        err.data = { content: "Please retry later" };
-        next(err);
-    }
-    //Decode the token for the username to verify that the username passed in the querystring is correct(no tampering)
-    let decodedToken = jwt.verify(socket.handshake.auth.token, tokenSecret);
-    // console.log(decodedToken);
-    if(decodedToken.userObject.username == socket.handshake.query.username){
-        // console.log("VERIFIED!!!")
-        next()
-    }else{
-        const err = new Error("not authorized");
-        err.data = { content: "Please retry later" };
-        next(err);
-    }
-})
+// io.use(async function (socket, next){
+//     // console.log("Socket Verification in process")
+//     // console.log(socket.handshake.query.username)
+//     // console.log(socket.handshake.query.id)
+//     // console.log(socket.handshake.auth.token)
+//     //Check if user has correct/up-to-date token
+//     let foundUser = await User.findOne({token: socket.handshake.auth.token});
+//     if(!foundUser){
+//         const err = new Error("not authorized");
+//         err.data = { content: "Please retry later" };
+//         next(err);
+//     }
+//     //Decode the token for the username to verify that the username passed in the querystring is correct(no tampering)
+//     let decodedToken = jwt.verify(socket.handshake.auth.token, tokenSecret);
+//     // console.log(decodedToken);
+//     if(decodedToken.userObject.username == socket.handshake.query.username){
+//         // console.log("VERIFIED!!!")
+//         next()
+//     }else{
+//         const err = new Error("not authorized");
+//         err.data = { content: "Please retry later" };
+//         next(err);
+//     }
+// })
 
 // If we get here connection is good to go/ no tampering on client side
 io.on('connection', catchAsync(async(clientSocket)=>{
