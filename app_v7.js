@@ -221,8 +221,9 @@ app.use((err, req, res, next) => {
 
 
 //http server (and socket.io server by extension) listens on port 3000 for incoming http ans socket.io requests
-server.listen(3000, ()=>{
-    console.log("JabberBoxMessenger listening on port 3000!")
+const port = process.env.PORT || 3000;
+server.listen(port, ()=>{
+    console.log(`JabberBoxMessenger listening on port ${port}!`)
 })
 
 
