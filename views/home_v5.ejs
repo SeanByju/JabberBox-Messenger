@@ -100,7 +100,7 @@
     let resultsList = document.getElementById('search-results');
     let friends = document.querySelectorAll('.btn-outline-success');
 
-    const socket = io('http://localhost:3000/', { query: `username=${username}&id=${id}`, auth: {token: `${token}`}}); 
+    const socket = io('https://still-gorge-73118.herokuapp.com/', { query: `username=${username}&id=${id}`, auth: {token: `${token}`}}); 
     socket.connect();
     socket.inAChat = false;
     socket.currentRoom = null;
