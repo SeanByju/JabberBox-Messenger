@@ -39,11 +39,10 @@
                                 <ul id="search-results" class="list-unstyled d-grid gap-1 order-sm-last" >
                                 </ul>
                             </div>
-
-                        
                         </div>
                         <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="UserSearchButton">Search</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="searchClose">Close</button>
                         </div>
                     </div>
                     </div>
@@ -99,6 +98,9 @@
     let searchInput = document.getElementById('user-search-field');
     let resultsList = document.getElementById('search-results');
     let friends = document.querySelectorAll('.btn-outline-success');
+    let searchButton = document.getElementById('UserSearchButton');
+    let closeButton = document.getElementById('searchClose');
+
 
     const socket = io('https://still-gorge-73118.herokuapp.com/', { query: `username=${username}&id=${id}`, auth: {token: `${token}`}}); 
     socket.connect();
@@ -175,19 +177,33 @@
         })
     })
 
-    searchForm.addEventListener('keyup', (e) => {
-        if(e.code === 'Enter'){
-            e.preventDefault();
-            if(!searchInput.value == ""){
-                socket.emit('searched user', {
-                searchedUser: searchInput.value,
-                sender: username,
+    // searchForm.addEventListener('keyup', (e) => {
+    //     if(e.code === 'Enter'){
+    //         e.preventDefault();
+    //         if(!searchInput.value == ""){
+    //             socket.emit('searched user', {
+    //             searchedUser: searchInput.value,
+    //             sender: username,
+    //         })
+    //         // console.log("you searched:", searchInput.value)
+    //         // searchInput.value = "";
+    //         resultsList.innerHTML = "";
+    //         }
+    //     }
+    // })
+
+    searchButton.addEventListener('click', () => {
+        if(!searchInput.value == ""){
+            socket.emit('searched user', {
+            searchedUser: searchInput.value,
+            sender: username,
             })
-            console.log("you searched:", searchInput.value)
-            // searchInput.value = "";
             resultsList.innerHTML = "";
-            }
         }
+    })
+
+    closeButton.addEventListener('click', () => {
+        resultsList.innerHTML = "";
     })
 
 
