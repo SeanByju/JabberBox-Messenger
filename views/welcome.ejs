@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="/css/home.css">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous"> 
-        <title>Document</title>
+        <title>JabberBox Messenger</title>
     </head>
     <body class="d-flex text-center text-dark bg-light">
         <div class="cover-contrainer d-flex w-100 h-100 p-3 mx-auto flex-column">
@@ -15,12 +15,12 @@
                     <h3 class="float-md-start mb-0"><img src="/images/Chatterbox.png" alt="" class="img-responsive"> &nbsp JabberBox Messenger</h3>
                     <nav class="nav nav-masthead justify-content-center float-md-end">
                         <a href="#" class="nav-link active" aria-current="page">Home</a>
-                    
-                        <a href="/login" class="nav-link">Login</a>
-                        <a href="/register" class="nav-link">Register</a>
-                    
-                        <a href="/logout" class="nav-link">Logout</a>
-                        
+                        <% if(!currentUser){ %> 
+                            <a href="/login" class="nav-link">Login</a>
+                            <a href="/register" class="nav-link">Register</a>
+                        <% }else{ %> 
+                            <a href="/logout" class="nav-link">Logout</a>
+                        <% } %> 
                     </nav>
                 </div>
             </header>
