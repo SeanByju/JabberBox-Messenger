@@ -15,6 +15,7 @@ module.exports.validateUser = (req, res, next) => {
         const msg = error.details.map(el => el.message).join(',');
         // throw new ExpressError(msg, 400)
         req.flash('error', msg);
+        return res.redirect('/register');
     }
     else{
         next()
